@@ -6,7 +6,7 @@
 #property copyright "Copyright 2020, Lowcash."
 #property link      "https://www.mql5.com"
 
-#include "../../Include/Internal/Common.mqh"
+#include "Common.mqh"
 
 void DrawTrendMarker(const string p_ID, const datetime p_DateTime, const double p_Value, const bool p_IsMarkerUpDirection, color p_Color) {
    const long SChartId = ChartID();
