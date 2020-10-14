@@ -24,7 +24,7 @@ class SignalManager {
    
    int GetSignalPointer() const { return(m_SignalPointer); }
    int GetMaxSignals() const { return(m_MaxSignals); }
- public:
+
  	SignalManager(const int m_MaxSignals = 10, const string p_ManagerID = "SignalManager");  
 };
 

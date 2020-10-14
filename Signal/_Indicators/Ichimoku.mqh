@@ -7,7 +7,7 @@
 #property link      "https://www.mql5.com"
 #property version   "1.00"
 
-#include "../Include/MQL4Helper.mqh"
+#include "../../Include/MQL4Helper.mqh"
 
 class IchimokuSettings {
  public:

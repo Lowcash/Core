@@ -7,7 +7,7 @@
 #property link      "https://www.mql5.com"
 #property version   "1.00"
 
-#include "../Include/MQL4Helper.mqh"
+#include "../../Include/MQL4Helper.mqh"
 
 class MovingAverageSettings {
  public:
@@ -27,7 +27,7 @@ struct MovingAverage {
    double MovingAverageValue;
 };
 
-void SetMovingAverage(MovingAverageSettings *p_MovingAverageSetting, double &p_MovingAverageValue) {
+void SetMovingAverage(MovingAverageSettings *p_MovingAverageSetting, const int p_Shift, double &p_MovingAverageValue) {
    const int _Handle = iMA(p_MovingAverageSetting.m_Symbol, p_MovingAverageSetting.m_TimeFrame, p_MovingAverageSetting.m_Period, p_MovingAverageSetting.m_Shift, p_MovingAverageSetting.m_Method, p_MovingAverageSetting.m_AppliedTo);
    
    if(_Handle < 0) {
@@ -35,5 +35,5 @@ void SetMovingAverage(MovingAverageSettings *p_MovingAverageSetting, double &p_M
       return;
    }
    
-   p_MovingAverageValue = CopyBufferMQL4(_Handle, 0, p_MovingAverageSetting.m_Shift);
+   p_MovingAverageValue = CopyBufferMQL4(_Handle, 0, p_Shift);
 }
