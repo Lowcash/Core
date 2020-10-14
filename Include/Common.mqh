@@ -33,17 +33,47 @@ struct ObjectBuffer {
 };
 
 static CHashMap<ENUM_TIMEFRAMES, datetime> Times;
+static ENUM_DAY_OF_WEEK DayOfWeek;
 
 double GetForexPipValue() {
    return(_Digits % 2 == 1 ? (_Point * 10) : _Point);
 }
 
-int GetNumPipsBetweenPrices(const double p_FirstPrice, const double p_SecondPrice, const double p_PipValue) {
+double GetNumPipsBetweenPrices(const double p_FirstPrice, const double p_SecondPrice, const double p_PipValue) {
    return(
-      MathAbs(
-         (int)(p_FirstPrice / p_PipValue) - (int)(p_SecondPrice / p_PipValue)
-      )
+      NormalizeDouble(MathAbs(
+         (int)((p_FirstPrice / (p_PipValue) * 100)) - (int)((p_SecondPrice / (p_PipValue) * 100))
+      ) / 100.0, 2)
    );
+}
+
+bool IsBullCandle(const int p_BarIdx) {
+   return(Open[p_BarIdx] < Close[p_BarIdx]);
+}
+
+bool IsBearCandle(const int p_BarIdx) {
+   return(Open[p_BarIdx] > Close[p_BarIdx]);
+}
+
+bool IsValueInRange(const double p_Value, const double p_Begin, const double p_End) {
+   const double _LowerValue = MathMin(p_Begin, p_End);
+   const double _HigherValue = MathMax(p_Begin, p_End);
+   
+   return(p_Value > _LowerValue && p_Value < _HigherValue);
+}
+
+bool IsNewDay(const ENUM_DAY_OF_WEEK p_DayOfWeek) {
+   if(DayOfWeek != p_DayOfWeek) {
+      DayOfWeek = p_DayOfWeek;
+      
+      return(true);
+   }
+   
+   return(false);
+}
+
+bool IsNewWeek(const ENUM_DAY_OF_WEEK p_ActualDayOfWeek, const ENUM_DAY_OF_WEEK p_FirstDayOfWeek) {
+   return(IsNewDay(p_ActualDayOfWeek) && p_ActualDayOfWeek == p_FirstDayOfWeek);
 }
 
 bool IsNewBar(const ENUM_TIMEFRAMES p_TimeFrame) {

@@ -12,6 +12,9 @@ static double Open[], Close[], Low[];
 static datetime _Time;
 static double Ask, Bid;
 
+static MqlDateTime _TimeStruct;
+static ENUM_DAY_OF_WEEK _DayOfWeek;
+
 void UpdatePredefinedVars() {
    ArraySetAsSeries(Time, true);
    ArraySetAsSeries(Open, true);
@@ -28,14 +31,18 @@ void UpdatePredefinedVars() {
    _Time = _LastTick.time;
    Ask = _LastTick.ask;
    Bid = _LastTick.bid;
+   
+   TimeCurrent(_TimeStruct);
+   
+   _DayOfWeek = (ENUM_DAY_OF_WEEK)_TimeStruct.day_of_week;
 }
 
 datetime iTimeMQL4(const string p_Symbol, const ENUM_TIMEFRAMES p_TimeFrame, const int p_Shift) {
    if(p_Shift < 0) return(-1);
    
-   datetime Arr[];
-   if(CopyTime(p_Symbol, p_TimeFrame, p_Shift, 1, Arr) > 0) { 
-      return(Arr[0]); 
+   datetime _Arr[];
+   if(CopyTime(p_Symbol, p_TimeFrame, p_Shift, 1, _Arr) > 0) { 
+      return(_Arr[0]); 
    }
    
    return(-1);
