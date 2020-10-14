@@ -27,7 +27,7 @@ struct MovingAverage {
    double MovingAverageValue;
 };
 
-void SetMovingAverage(MovingAverageSettings *p_MovingAverageSetting, const int p_Shift, double &p_MovingAverageValue) {
+void SetMovingAverage(MovingAverageSettings *p_MovingAverageSetting, const int p_Shift, double &p_MovingAverage) {
    const int _Handle = iMA(p_MovingAverageSetting.m_Symbol, p_MovingAverageSetting.m_TimeFrame, p_MovingAverageSetting.m_Period, p_MovingAverageSetting.m_Shift, p_MovingAverageSetting.m_Method, p_MovingAverageSetting.m_AppliedTo);
    
    if(_Handle < 0) {
@@ -35,5 +35,5 @@ void SetMovingAverage(MovingAverageSettings *p_MovingAverageSetting, const int p
       return;
    }
    
-   p_MovingAverageValue = NormalizeDouble(CopyBufferMQL4(_Handle, 0, p_Shift), _Digits + 1);
+   p_MovingAverage = NormalizeDouble(CopyBufferMQL4(_Handle, 0, p_Shift), _Digits + 1);
 }

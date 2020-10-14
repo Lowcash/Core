@@ -20,12 +20,16 @@ class IchimokuSettings {
 };
 
 struct Ichimoku {
+ public:
    IchimokuSettings *ptr_IchimokuSettings;
    
    double TenkanSen, KijunSen, ChinkouSpan, SenkouSpanA, SenkouSpanB;
+ 
+ Ichimoku(IchimokuSettings *p_IchimokuSettings)
+   : ptr_IchimokuSettings(p_IchimokuSettings) {}
 };
 
-void SetIchimoku(IchimokuSettings *p_IchimokuSettings, double &p_TenkanSen, double &p_KijunSen, double &p_ChinkouSpan, double &p_SenkouSpanA, double &p_SenkouSpanB) {
+void SetIchimoku(IchimokuSettings *p_IchimokuSettings, const int p_Shift, double &p_TenkanSen, double &p_KijunSen, double &p_ChinkouSpan, double &p_SenkouSpanA, double &p_SenkouSpanB) {
    const int _Handle = iIchimoku(p_IchimokuSettings.m_Symbol, p_IchimokuSettings.m_TimeFrame, p_IchimokuSettings.m_TenkanSenPeriod, p_IchimokuSettings.m_KijunSenPeriod, p_IchimokuSettings.m_SenkouSpanBPeriod);
    
    if(_Handle < 0) {
@@ -33,9 +37,9 @@ void SetIchimoku(IchimokuSettings *p_IchimokuSettings, double &p_TenkanSen, doub
       return;
    }
    
-   p_TenkanSen = CopyBufferMQL4(_Handle, 0, p_IchimokuSettings.m_Shift);
-   p_KijunSen = CopyBufferMQL4(_Handle, 1, p_IchimokuSettings.m_Shift);
-   p_ChinkouSpan = CopyBufferMQL4(_Handle, 2, -p_IchimokuSettings.m_KijunSenPeriod);
-   p_SenkouSpanA = CopyBufferMQL4(_Handle, 3, -p_IchimokuSettings.m_KijunSenPeriod);
-   p_SenkouSpanB = CopyBufferMQL4(_Handle, 4, p_IchimokuSettings.m_Shift);
+   p_TenkanSen = NormalizeDouble(CopyBufferMQL4(_Handle, TENKANSEN_LINE, p_Shift), _Digits + 1);
+   p_KijunSen = NormalizeDouble(CopyBufferMQL4(_Handle, KIJUNSEN_LINE, p_Shift), _Digits + 1);
+   p_ChinkouSpan = NormalizeDouble(CopyBufferMQL4(_Handle, CHIKOUSPAN_LINE, p_IchimokuSettings.m_KijunSenPeriod), _Digits + 1);
+   p_SenkouSpanA = NormalizeDouble(CopyBufferMQL4(_Handle, SENKOUSPANA_LINE, p_Shift), _Digits + 1);
+   p_SenkouSpanB = NormalizeDouble(CopyBufferMQL4(_Handle, SENKOUSPANB_LINE, p_Shift), _Digits + 1);
 }

@@ -20,11 +20,14 @@ class TrendManager : public SignalManager {
 
    void UpdateTrend(const bool p_IsNewTrend, const datetime p_Time, const double p_Value);
    
-   Trend::State GetStateByIMAOutCandles(const int p_MinNumOutCandles, MovingAverageSettings &p_MAFastSettings, MovingAverageSettings &p_MASlowSettings);
+   Trend::State GetStateByIMAOutCandles(MovingAverageSettings &p_MAFastSettings, MovingAverageSettings &p_MASlowSettings, const int p_MinNumOutCandles);
+   Trend::State GetStateByIchimokuTracing(IchimokuSettings &p_IchimokuSetting, const int p_TraceLine, const bool p_IsTraceUntilNotInvalid = false);
  public:
-	TrendManager(const int p_MaxTrends = 10, const string p_ManagerID = "TrendManager");
+	TrendManager(const int p_MaxTrends = 1, const string p_ManagerID = "TrendManager");
 	
-	Trend::State AnalyzeByIMAOutCandles(const int p_MinOutCandles, MovingAverageSettings &p_MAFastSettings, MovingAverageSettings &p_MASlowSettings);
+	Trend::State AnalyzeByIMAOutCandles(MovingAverageSettings &p_MAFastSettings, MovingAverageSettings &p_MASlowSettings, const int p_MinOutCandles);
+	Trend::State AnalyzeByIchimokuTracing(IchimokuSettings &p_IchimokuSetting, const int p_TraceLine, const bool p_IsTraceUntilNotInvalid = false);
+	
 	Trend::State GetCurrentState() const { return(m_CurrentState); }
 	
    Trend* GetSelectedTrend() { return(&m_Trends[GetSignalPointer()]); }
@@ -49,10 +52,10 @@ void TrendManager::UpdateTrend(const bool p_IsNewTrend, const datetime p_Time, c
    } 
 }
 
-Trend::State TrendManager::AnalyzeByIMAOutCandles(const int p_MinOutCandles, MovingAverageSettings &p_MAFastSettings, MovingAverageSettings &p_MASlowSettings) {
+Trend::State TrendManager::AnalyzeByIMAOutCandles(MovingAverageSettings &p_MAFastSettings, MovingAverageSettings &p_MASlowSettings, const int p_MinOutCandles) {
    const Trend::State _PreviousState = m_CurrentState;
    
-   if((m_CurrentState = GetStateByIMAOutCandles(p_MinOutCandles, p_MAFastSettings, p_MASlowSettings)) != Trend::State::INVALID_TREND) {
+   if((m_CurrentState = GetStateByIMAOutCandles(p_MAFastSettings, p_MASlowSettings, p_MinOutCandles)) != Trend::State::INVALID_TREND) {
       if(_PreviousState != m_CurrentState) { // Is new Trend?
          SelectNextSignal();
       } 
@@ -63,7 +66,21 @@ Trend::State TrendManager::AnalyzeByIMAOutCandles(const int p_MinOutCandles, Mov
    return(m_CurrentState);
 }
 
-Trend::State TrendManager::GetStateByIMAOutCandles(const int p_MinNumOutCandles, MovingAverageSettings &p_MAFastSettings, MovingAverageSettings &p_MASlowSettings) {
+Trend::State TrendManager::AnalyzeByIchimokuTracing(IchimokuSettings &p_IchimokuSetting, const int p_TraceLine, const bool p_IsTraceUntilNotInvalid) {
+   const Trend::State _PreviousState = m_CurrentState;
+   
+   if((m_CurrentState = GetStateByIchimokuTracing(p_IchimokuSetting, p_TraceLine, p_IsTraceUntilNotInvalid)) != Trend::State::INVALID_TREND) {
+      if(_PreviousState != m_CurrentState) { // Is new Trend?
+         SelectNextSignal();
+      } 
+      
+      UpdateTrend(_PreviousState != m_CurrentState, _Time, Bid);
+   }
+   
+   return(m_CurrentState);
+}
+
+Trend::State TrendManager::GetStateByIMAOutCandles(MovingAverageSettings &p_MAFastSettings, MovingAverageSettings &p_MASlowSettings, const int p_MinNumOutCandles) {
    double _CurrentIMASlow; SetMovingAverage(&p_MASlowSettings, 1, _CurrentIMASlow);
    
    switch(m_CurrentState) {
@@ -95,5 +112,50 @@ Trend::State TrendManager::GetStateByIMAOutCandles(const int p_MinNumOutCandles,
 	   }
    }
 
+   return(Trend::State::INVALID_TREND);
+}
+
+Trend::State TrendManager::GetStateByIchimokuTracing(IchimokuSettings &p_IchimokuSetting, const int p_TraceLine, const bool p_IsTraceUntilNotInvalid) {
+   Ichimoku _CurrIchimoku(&p_IchimokuSetting);
+   Ichimoku _PrevIchimoku(&p_IchimokuSetting);
+   
+   for(int i = 1; (p_IsTraceUntilNotInvalid && i < 999) || i == 1; ++i) {
+      SetIchimoku(_CurrIchimoku.ptr_IchimokuSettings, i + 0, _CurrIchimoku.TenkanSen, _CurrIchimoku.KijunSen, _CurrIchimoku.ChinkouSpan, _CurrIchimoku.SenkouSpanA, _CurrIchimoku.SenkouSpanB);
+      SetIchimoku(_PrevIchimoku.ptr_IchimokuSettings, i + 1, _PrevIchimoku.TenkanSen, _PrevIchimoku.KijunSen, _PrevIchimoku.ChinkouSpan, _PrevIchimoku.SenkouSpanA, _PrevIchimoku.SenkouSpanB);
+      
+      switch(p_TraceLine) {
+         case TENKANSEN_LINE: {
+            if(_PrevIchimoku.TenkanSen < _CurrIchimoku.TenkanSen) { return(Trend::State::VALID_UPTREND); }
+            if(_PrevIchimoku.TenkanSen > _CurrIchimoku.TenkanSen) { return(Trend::State::VALID_DOWNTREND); }
+      
+            break;
+         }
+         case KIJUNSEN_LINE: {
+            if(_PrevIchimoku.KijunSen < _CurrIchimoku.KijunSen) { return(Trend::State::VALID_UPTREND); }
+            if(_PrevIchimoku.KijunSen > _CurrIchimoku.KijunSen) { return(Trend::State::VALID_DOWNTREND); }
+      
+            break;
+         }
+         case CHIKOUSPAN_LINE: {
+            if(_PrevIchimoku.ChinkouSpan < _CurrIchimoku.ChinkouSpan) { return(Trend::State::VALID_UPTREND); }
+            if(_PrevIchimoku.ChinkouSpan > _CurrIchimoku.ChinkouSpan) { return(Trend::State::VALID_DOWNTREND); }
+      
+            break;
+         }
+         case SENKOUSPANA_LINE: {
+            if(_PrevIchimoku.SenkouSpanA < _CurrIchimoku.SenkouSpanA) { return(Trend::State::VALID_UPTREND); }
+            if(_PrevIchimoku.SenkouSpanA > _CurrIchimoku.SenkouSpanA) { return(Trend::State::VALID_DOWNTREND); }
+      
+            break;
+         }
+         case SENKOUSPANB_LINE: {
+            if(_PrevIchimoku.SenkouSpanB < _CurrIchimoku.SenkouSpanB) { return(Trend::State::VALID_UPTREND); }
+            if(_PrevIchimoku.SenkouSpanB > _CurrIchimoku.SenkouSpanB) { return(Trend::State::VALID_DOWNTREND); }
+      
+            break;
+         }
+      }
+   }
+   
    return(Trend::State::INVALID_TREND);
 }
