@@ -68,9 +68,20 @@ double iMAMQL4(const string p_Symbol, const ENUM_TIMEFRAMES p_TimeFrame, const i
    const int _Handle = iMA(p_Symbol, p_TimeFrame, p_Period, p_MA_Shift, p_Method, p_AppliedTo);
    
    if(_Handle < 0) {
-      Print("The iMA object is not created: Error",GetLastError());
+      Print("The iMA object is not created: Error", GetLastError());
       return(-1);
    }
    
    return(CopyBufferMQL4(_Handle, 0, p_Shift));
 }
+
+/*double iIchimokuMQL4(const string p_Symbol, const ENUM_TIMEFRAMES p_TimeFrame, const int p_TenkanSenPeriod, const int p_KijunSenPeriod, const int p_SenkouSpanBPeriod, const int p_Shift) {
+   const int _Handle = iIchimoku(p_Symbol,p_TimeFrame, p_TenkanSenPeriod, p_KijunSenPeriod, p_SenkouSpanBPeriod);
+   
+   if(_Handle < 0) {
+      Print("The iIchimoku object is not created: Error", GetLastError());
+      return(-1);
+   }
+   
+   return(CopyBufferMQL4(_Handle, mode-1, p_Shift));
+}*/
