@@ -7,20 +7,6 @@
 #property link      "https://www.mql5.com"
 #property version   "1.00"
 
-//+------------------------------------------------------------------+
-struct MovingAverageSettings {
- public:
-	const ENUM_TIMEFRAMES m_TimeFrame;
-	const ENUM_MA_METHOD m_Method;
-	const ENUM_APPLIED_PRICE m_AppliedTo;
-	const int m_Period, m_Shift;
-	
-	MovingAverageSettings(const ENUM_TIMEFRAMES p_TimeFrame, const ENUM_MA_METHOD p_Method, const ENUM_APPLIED_PRICE p_AppliedTo, const int p_Period, const int p_Shift)
-		: m_TimeFrame(p_TimeFrame), m_Method(p_Method), m_AppliedTo(p_AppliedTo), m_Period(p_Period), m_Shift(p_Shift){}
-};
-
-//+------------------------------------------------------------------+
-
 class Signal {
  private:
    string m_SignalID;

@@ -89,3 +89,9 @@ bool IsNewBar(const ENUM_TIMEFRAMES p_TimeFrame) {
    
    return(_PrevTime != _CurrTime);
 }
+
+template<typename T>
+
+void SelectNext(T &p_Pointer, const T p_MaxValue) {
+    p_Pointer = p_Pointer >= p_MaxValue - 1 ? 0 : p_Pointer + 1;
+}
