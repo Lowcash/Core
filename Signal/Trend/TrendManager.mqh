@@ -118,8 +118,8 @@ Trend::State TrendManager::GetStateByIMAOutCandles(MovingAverageSettings &p_MAFa
 Trend::State TrendManager::GetStateByIchimokuTracing(IchimokuSettings &p_IchimokuSetting, const int p_TraceLine, const bool p_IsTraceUntilNotInvalid) {
    Ichimoku _CurrIchimoku(&p_IchimokuSetting);
    Ichimoku _PrevIchimoku(&p_IchimokuSetting);
-   
-   for(int i = 1; (p_IsTraceUntilNotInvalid && i < 999) || i == 1; ++i) {
+
+   for(int i = 1; (p_IsTraceUntilNotInvalid && i < Bars(p_IchimokuSetting.m_Symbol, p_IchimokuSetting.m_TimeFrame)) || i == 1; ++i) {
       SetIchimoku(_CurrIchimoku.ptr_IchimokuSettings, i + 0, _CurrIchimoku.TenkanSen, _CurrIchimoku.KijunSen, _CurrIchimoku.ChinkouSpan, _CurrIchimoku.SenkouSpanA, _CurrIchimoku.SenkouSpanB);
       SetIchimoku(_PrevIchimoku.ptr_IchimokuSettings, i + 1, _PrevIchimoku.TenkanSen, _PrevIchimoku.KijunSen, _PrevIchimoku.ChinkouSpan, _PrevIchimoku.SenkouSpanA, _PrevIchimoku.SenkouSpanB);
       
