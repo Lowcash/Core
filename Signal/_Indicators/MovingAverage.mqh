@@ -35,5 +35,5 @@ void SetMovingAverage(MovingAverageSettings *p_MovingAverageSetting, const int p
       return;
    }
    
-   p_MovingAverageValue = CopyBufferMQL4(_Handle, 0, p_Shift);
+   p_MovingAverageValue = NormalizeDouble(CopyBufferMQL4(_Handle, 0, p_Shift), _Digits + 1);
 }

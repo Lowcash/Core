@@ -64,15 +64,15 @@ Trend::State TrendManager::AnalyzeByIMAOutCandles(const int p_MinOutCandles, Mov
 }
 
 Trend::State TrendManager::GetStateByIMAOutCandles(const int p_MinNumOutCandles, MovingAverageSettings &p_MAFastSettings, MovingAverageSettings &p_MASlowSettings) {
-   double _CurrentIMASlow; SetMovingAverage(&p_MASlowSettings, 0, _CurrentIMASlow);
+   double _CurrentIMASlow; SetMovingAverage(&p_MASlowSettings, 1, _CurrentIMASlow);
    
    switch(m_CurrentState) {
       case Trend::State::VALID_UPTREND:
-         if(Close[0] > _CurrentIMASlow) { return(Trend::State::VALID_UPTREND); }
+         if(Close[1] > _CurrentIMASlow) { return(Trend::State::VALID_UPTREND); }
    
          break;
       case Trend::State::VALID_DOWNTREND:
-         if(Close[0] < _CurrentIMASlow) { return(Trend::State::VALID_DOWNTREND); }
+         if(Close[1] < _CurrentIMASlow) { return(Trend::State::VALID_DOWNTREND); }
    
          break;
       case Trend::State::INVALID_TREND: {
@@ -80,7 +80,7 @@ Trend::State TrendManager::GetStateByIMAOutCandles(const int p_MinNumOutCandles,
 	      
 	      double _MAFast = DBL_EPSILON, _MASlow = DBL_EPSILON;
 	      
-	      for(int i = 0; i < p_MinNumOutCandles && _IsUpTrend && _IsDownTrend; ++i) {
+	      for(int i = 1; i <= p_MinNumOutCandles && _IsUpTrend && _IsDownTrend; ++i) {
 	         SetMovingAverage(&p_MAFastSettings, i, _MAFast);
 	         SetMovingAverage(&p_MASlowSettings, i, _MASlow);
             
