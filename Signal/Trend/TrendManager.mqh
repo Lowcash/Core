@@ -16,7 +16,7 @@ class TrendManager : public SignalManager {
  private:  
    Trend m_Trends[];
    
- 	Trend::State m_CurrentState;
+ 	Trend::State m_CurrState;
 
    void UpdateTrend(const bool p_IsNewTrend, const datetime p_Time, const double p_Value);
    
@@ -28,13 +28,13 @@ class TrendManager : public SignalManager {
 	Trend::State AnalyzeByIMAOutCandles(MovingAverageSettings &p_MAFastSettings, MovingAverageSettings &p_MASlowSettings, const int p_MinOutCandles);
 	Trend::State AnalyzeByIchimokuTracing(IchimokuSettings &p_IchimokuSetting, const int p_TraceLine, const bool p_IsTraceUntilNotInvalid = false);
 	
-	Trend::State GetCurrentState() const { return(m_CurrentState); }
+	Trend::State GetCurrentState() const { return(m_CurrState); }
 	
    Trend* GetSelectedTrend() { return(&m_Trends[GetSignalPointer()]); }
 };
 
 TrendManager::TrendManager(const int p_MaxTrends, const string p_ManagerID)
-   : SignalManager(p_MaxTrends, p_ManagerID), m_CurrentState(Trend::State::INVALID_TREND) {
+   : SignalManager(p_MaxTrends, p_ManagerID), m_CurrState(Trend::State::INVALID_TREND) {
    if(ArrayResize(m_Trends, p_MaxTrends) != -1) {
       PrintFormat("Trend array initialized succesfully with size %d", GetMaxSignals());
    } else {
@@ -53,43 +53,43 @@ void TrendManager::UpdateTrend(const bool p_IsNewTrend, const datetime p_Time, c
 }
 
 Trend::State TrendManager::AnalyzeByIMAOutCandles(MovingAverageSettings &p_MAFastSettings, MovingAverageSettings &p_MASlowSettings, const int p_MinOutCandles) {
-   const Trend::State _PreviousState = m_CurrentState;
+   const Trend::State _PreviousState = m_CurrState;
    
-   if((m_CurrentState = GetStateByIMAOutCandles(p_MAFastSettings, p_MASlowSettings, p_MinOutCandles)) != Trend::State::INVALID_TREND) {
-      if(_PreviousState != m_CurrentState) { // Is new Trend?
+   if((m_CurrState = GetStateByIMAOutCandles(p_MAFastSettings, p_MASlowSettings, p_MinOutCandles)) != Trend::State::INVALID_TREND) {
+      if(_PreviousState != m_CurrState) { // Is new Trend?
          SelectNextSignal();
       } 
       
-      UpdateTrend(_PreviousState != m_CurrentState, _Time, Bid);
+      UpdateTrend(_PreviousState != m_CurrState, _Time, Bid);
    }
    
-   return(m_CurrentState);
+   return(m_CurrState);
 }
 
 Trend::State TrendManager::AnalyzeByIchimokuTracing(IchimokuSettings &p_IchimokuSetting, const int p_TraceLine, const bool p_IsTraceUntilNotInvalid) {
-   const Trend::State _PreviousState = m_CurrentState;
+   const Trend::State _PreviousState = m_CurrState;
    
-   if((m_CurrentState = GetStateByIchimokuTracing(p_IchimokuSetting, p_TraceLine, p_IsTraceUntilNotInvalid)) != Trend::State::INVALID_TREND) {
-      if(_PreviousState != m_CurrentState) { // Is new Trend?
+   if((m_CurrState = GetStateByIchimokuTracing(p_IchimokuSetting, p_TraceLine, p_IsTraceUntilNotInvalid)) != Trend::State::INVALID_TREND) {
+      if(_PreviousState != m_CurrState) { // Is new Trend?
          SelectNextSignal();
       } 
       
-      UpdateTrend(_PreviousState != m_CurrentState, _Time, Bid);
+      UpdateTrend(_PreviousState != m_CurrState, _Time, Bid);
    }
    
-   return(m_CurrentState);
+   return(m_CurrState);
 }
 
 Trend::State TrendManager::GetStateByIMAOutCandles(MovingAverageSettings &p_MAFastSettings, MovingAverageSettings &p_MASlowSettings, const int p_MinNumOutCandles) {
-   double _CurrentIMASlow; SetMovingAverage(&p_MASlowSettings, 1, _CurrentIMASlow);
+   double _CurrIMASlow; SetMovingAverage(&p_MASlowSettings, 1, _CurrIMASlow);
    
-   switch(m_CurrentState) {
+   switch(m_CurrState) {
       case Trend::State::VALID_UPTREND:
-         if(Close[1] > _CurrentIMASlow) { return(Trend::State::VALID_UPTREND); }
+         if(Close[1] > _CurrIMASlow) { return(Trend::State::VALID_UPTREND); }
    
          break;
       case Trend::State::VALID_DOWNTREND:
-         if(Close[1] < _CurrentIMASlow) { return(Trend::State::VALID_DOWNTREND); }
+         if(Close[1] < _CurrIMASlow) { return(Trend::State::VALID_DOWNTREND); }
    
          break;
       case Trend::State::INVALID_TREND: {
