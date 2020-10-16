@@ -40,7 +40,7 @@ TrendManager::TrendManager(const int p_MaxTrends, const string p_ManagerID)
    } else {
       Print("Trend array initialization failed with error %", GetLastError());
    }
-};
+}
 
 void TrendManager::UpdateTrend(const bool p_IsNewTrend, const datetime p_Time, const double p_Value) {
 	const int _SignalPointer = GetSignalPointer();
