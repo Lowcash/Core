@@ -120,25 +120,25 @@ ArraySortDirection GetArraySortDirection(T &p_Values[]) {
 }
 
 template<typename T>
-T GetClosest(T p_FromValue, T &p_ToValues[]) {
-   const bool _IsDouble = typename(p_FromValue) == "double";
+T GetClosest(T &p_FromValues[], T p_ToValue) {
+   const bool _IsDouble = typename(p_ToValue) == "double";
    
    // Pair <Index, Distance>
-   Pair<T, T> _ClosestPair(p_FromValue, DBL_MAX);
+   Pair<T, T> _ClosestPair(p_ToValue, DBL_MAX);
    
-   for(uint i = 0; i < (uint)ArraySize(p_ToValues); ++i) {
-      T _FromValue = p_FromValue;
-      T _ToValue = p_ToValues[i];
+   for(uint i = 0; i < (uint)ArraySize(p_FromValues); ++i) {
+      T _FromValue = p_ToValue;
+      T _ToValue = p_FromValues[i];
       
       if(_IsDouble) {
-         _FromValue *= 10 * _Digits;
-         _ToValue *= 10 * _Digits;
+         _FromValue /= _Point;
+         _ToValue /= _Point;
       }
       
       T _Distance;
       
       if((_Distance = MathAbs(_FromValue - _ToValue)) < _ClosestPair.Value) {
-         _ClosestPair.Key = p_ToValues[i];
+         _ClosestPair.Key = p_FromValues[i];
          _ClosestPair.Value = _Distance;
       }
    }
@@ -147,25 +147,25 @@ T GetClosest(T p_FromValue, T &p_ToValues[]) {
 }
   
 template<typename T>
-T GetFarthest(T p_FromValue, T &p_ToValues[]) {
-   const bool _IsDouble = typename(p_FromValue) == "double";
+T GetFarthest(T &p_FromValues[], T p_ToValue) {
+   const bool _IsDouble = typename(p_ToValue) == "double";
    
    // Pair <Index, Distance>
-   Pair<T, T> _FarthestPair(p_FromValue, DBL_MIN);
+   Pair<T, T> _FarthestPair(p_ToValue, DBL_MIN);
    
-   for(uint i = 0; i < (uint)ArraySize(p_ToValues); ++i) {
-      T _FromValue = p_FromValue;
-      T _ToValue = p_ToValues[i];
+   for(uint i = 0; i < (uint)ArraySize(p_FromValues); ++i) {
+      T _FromValue = p_ToValue;
+      T _ToValue = p_FromValues[i];
       
       if(_IsDouble) {
-         _FromValue *= 10 * _Digits;
-         _ToValue *= 10 * _Digits;
+         _FromValue /= _Point;
+         _ToValue /= _Point;
       }
       
       T _Distance;
       
       if((_Distance = MathAbs(_FromValue - _ToValue)) > _FarthestPair.Value) {
-         _FarthestPair.Key = p_ToValues[i];
+         _FarthestPair.Key = p_FromValues[i];
          _FarthestPair.Value = _Distance;
       }
    }
