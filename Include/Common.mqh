@@ -32,6 +32,16 @@ struct ObjectBuffer {
    }
 };
 
+template<typename I, typename M>
+class Pair {
+ public:
+   I Key;
+   M Value;
+   
+   Pair(const I p_Key, const M p_Value)
+      : Key(p_Key), Value(p_Value) {}
+};
+
 static CHashMap<ENUM_TIMEFRAMES, datetime> Times;
 static ENUM_DAY_OF_WEEK DayOfWeek;
 
@@ -90,8 +100,80 @@ bool IsNewBar(const ENUM_TIMEFRAMES p_TimeFrame) {
    return(_PrevTime != _CurrTime);
 }
 
-template<typename T>
 
+
+enum ArraySortDirection { NOT_SORTED = -1, ASCENDING = 1, DESCENDING = 2 };
+
+template<typename T>
+ArraySortDirection GetArraySortDirection(T &p_Values[]) {
+   bool _IsSortedAsc = true, _IsSortedDesc = true;
+         
+   for(uint i = 1; i < (uint)ArraySize(p_Values); ++i) {
+      if(p_Values[i - 1] > p_Values[i]) { _IsSortedAsc = false; }
+      if(p_Values[i - 1] < p_Values[i]) { _IsSortedDesc = false; }
+   }
+   
+   if(_IsSortedAsc) { return(ArraySortDirection::ASCENDING); }
+   if(_IsSortedDesc) { return(ArraySortDirection::DESCENDING); }
+   
+   return(ArraySortDirection::NOT_SORTED);
+}
+
+template<typename T>
+T GetClosest(T p_FromValue, T &p_ToValues[]) {
+   const bool _IsDouble = typename(p_FromValue) == "double";
+   
+   // Pair <Index, Distance>
+   Pair<T, T> _ClosestPair(p_FromValue, DBL_MAX);
+   
+   for(uint i = 0; i < (uint)ArraySize(p_ToValues); ++i) {
+      T _FromValue = p_FromValue;
+      T _ToValue = p_ToValues[i];
+      
+      if(_IsDouble) {
+         _FromValue *= 10 * _Digits;
+         _ToValue *= 10 * _Digits;
+      }
+      
+      T _Distance;
+      
+      if((_Distance = MathAbs(_FromValue - _ToValue)) < _ClosestPair.Value) {
+         _ClosestPair.Key = p_ToValues[i];
+         _ClosestPair.Value = _Distance;
+      }
+   }
+
+   return(_ClosestPair.Key);
+}
+  
+template<typename T>
+T GetFarthest(T p_FromValue, T &p_ToValues[]) {
+   const bool _IsDouble = typename(p_FromValue) == "double";
+   
+   // Pair <Index, Distance>
+   Pair<T, T> _FarthestPair(p_FromValue, DBL_MIN);
+   
+   for(uint i = 0; i < (uint)ArraySize(p_ToValues); ++i) {
+      T _FromValue = p_FromValue;
+      T _ToValue = p_ToValues[i];
+      
+      if(_IsDouble) {
+         _FromValue *= 10 * _Digits;
+         _ToValue *= 10 * _Digits;
+      }
+      
+      T _Distance;
+      
+      if((_Distance = MathAbs(_FromValue - _ToValue)) > _FarthestPair.Value) {
+         _FarthestPair.Key = p_ToValues[i];
+         _FarthestPair.Value = _Distance;
+      }
+   }
+
+   return(_FarthestPair.Key);
+}
+
+template<typename T>
 void SelectNext(T &p_Pointer, const T p_MaxValue) {
     p_Pointer = p_Pointer >= p_MaxValue - 1 ? 0 : p_Pointer + 1;
 }

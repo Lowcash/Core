@@ -7,6 +7,7 @@
 #property link      "https://www.mql5.com"
 #property version   "1.00"
 
+#include "../../Include/Common.mqh"
 #include "../_SignalManager.mqh"
 #include "../_Indicators/MovingAverage.mqh"
 #include "../_Indicators/Ichimoku.mqh"
@@ -20,12 +21,12 @@ class TrendManager : public SignalManager {
 
    void UpdateTrend(const bool p_IsNewTrend, const datetime p_Time, const double p_Value);
    
-   Trend::State GetStateByIMAOutCandles(MovingAverageSettings &p_MAFastSettings, MovingAverageSettings &p_MASlowSettings, const int p_MinNumOutCandles);
+   Trend::State GetTrendByCandlePosition(const double p_CandleValue, double &p_Values[], const int p_CritValueIdx, const bool p_CheckOrderedValues, const bool p_CheckCritValueFarthest);
    Trend::State GetStateByIchimokuTracing(IchimokuSettings &p_IchimokuSetting, const int p_TraceLine, const bool p_IsTraceUntilNotInvalid = false);
  public:
 	TrendManager(const int p_MaxTrends = 1, const string p_ManagerID = "TrendManager");
 	
-	Trend::State AnalyzeByIMAOutCandles(MovingAverageSettings &p_MAFastSettings, MovingAverageSettings &p_MASlowSettings, const int p_MinOutCandles);
+	Trend::State AnalyzeByTrendByCandlePosition(const double p_CandleValue, double &p_Values[], const int p_CritValueIdx, const bool p_CheckOrderedValues, const bool p_CheckCritValueFarthest);
 	Trend::State AnalyzeByIchimokuTracing(IchimokuSettings &p_IchimokuSetting, const int p_TraceLine, const bool p_IsTraceUntilNotInvalid = false);
 	
 	Trend::State GetCurrentState() const { return(m_CurrState); }
@@ -52,10 +53,10 @@ void TrendManager::UpdateTrend(const bool p_IsNewTrend, const datetime p_Time, c
    } 
 }
 
-Trend::State TrendManager::AnalyzeByIMAOutCandles(MovingAverageSettings &p_MAFastSettings, MovingAverageSettings &p_MASlowSettings, const int p_MinOutCandles) {
+Trend::State TrendManager::AnalyzeByTrendByCandlePosition(const double p_CandleValue, double &p_Values[], const int p_CritValueIdx, const bool p_CheckOrderedValues, const bool p_CheckCritValueFarthest) {
    const Trend::State _PreviousState = m_CurrState;
    
-   if((m_CurrState = GetStateByIMAOutCandles(p_MAFastSettings, p_MASlowSettings, p_MinOutCandles)) != Trend::State::INVALID_TREND) {
+   if((m_CurrState = GetTrendByCandlePosition(p_CandleValue, p_Values, p_CritValueIdx, p_CheckOrderedValues, p_CheckCritValueFarthest)) != Trend::State::INVALID_TREND) {
       if(_PreviousState != m_CurrState) { // Is new Trend?
          SelectNextSignal();
       } 
@@ -80,33 +81,24 @@ Trend::State TrendManager::AnalyzeByIchimokuTracing(IchimokuSettings &p_Ichimoku
    return(m_CurrState);
 }
 
-Trend::State TrendManager::GetStateByIMAOutCandles(MovingAverageSettings &p_MAFastSettings, MovingAverageSettings &p_MASlowSettings, const int p_MinNumOutCandles) {
-   double _CurrIMASlow; SetMovingAverage(&p_MASlowSettings, 1, _CurrIMASlow);
-   
+Trend::State TrendManager::GetTrendByCandlePosition(const double p_CandleValue, double &p_Values[], const int p_CritValueIdx, const bool p_CheckOrderedValues, const bool p_CheckCritValueFarthest) {
    switch(m_CurrState) {
       case Trend::State::VALID_UPTREND:
-         if(Close[1] > _CurrIMASlow) { return(Trend::State::VALID_UPTREND); }
+         if(p_CandleValue > p_Values[p_CritValueIdx]) { return(Trend::State::VALID_UPTREND); }
    
          break;
       case Trend::State::VALID_DOWNTREND:
-         if(Close[1] < _CurrIMASlow) { return(Trend::State::VALID_DOWNTREND); }
+         if(p_CandleValue < p_Values[p_CritValueIdx]) { return(Trend::State::VALID_DOWNTREND); }
    
          break;
       case Trend::State::INVALID_TREND: {
-	      bool _IsUpTrend = true, _IsDownTrend = true;
-	      
-	      double _MAFast = DBL_EPSILON, _MASlow = DBL_EPSILON;
-	      
-	      for(int i = 1; i <= p_MinNumOutCandles && _IsUpTrend && _IsDownTrend; ++i) {
-	         SetMovingAverage(&p_MAFastSettings, i, _MAFast);
-	         SetMovingAverage(&p_MASlowSettings, i, _MASlow);
-            
-	         if(!(Close[i] > _MAFast && _MAFast > _MASlow)) { _IsUpTrend = false; }
-	         if(!(Close[i] < _MAFast && _MAFast < _MASlow)) { _IsDownTrend = false; }   
-	      }
-	
-	      if(_IsUpTrend) { return(Trend::State::VALID_UPTREND); }
-	      if(_IsDownTrend) { return(Trend::State::VALID_DOWNTREND); }
+         const bool _IsOrderedValuesConditionOK = !p_CheckOrderedValues || (p_CheckOrderedValues && GetArraySortDirection(p_Values) != ArraySortDirection::NOT_SORTED);
+         const bool _IsCritValueFarthestConditionOK = !p_CheckCritValueFarthest || (p_CheckCritValueFarthest && GetFarthest(p_CandleValue, p_Values) == p_Values[p_CritValueIdx]);
+         
+         if(_IsOrderedValuesConditionOK && _IsCritValueFarthestConditionOK) {
+            if(p_CandleValue > p_Values[p_CritValueIdx]) { return(Trend::State::VALID_UPTREND); }
+	         if(p_CandleValue < p_Values[p_CritValueIdx]) { return(Trend::State::VALID_DOWNTREND); } 
+         }
 	
 	      break;
 	   }
