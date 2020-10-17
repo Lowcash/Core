@@ -19,11 +19,11 @@ class CrossoverManager : public SignalManager {
 
    void UpdateCrossover(const bool p_IsNewCrossover, const datetime p_Time, const double p_Value);
    
-   Crossover::State GetStateByIchimokuComparer(IchimokuSettings &p_IchimokuSetting, const int p_TraceLineA, const int p_TraceLineB);
+   Crossover::State GetStateByValueComparer(double &p_ValuesA[], double &p_ValuesB[]);
  public:
 	CrossoverManager(const int p_MaxTrends = 1, const string p_ManagerID = "CrossoverManager");
 	
-	Crossover::State AnalyzeByIchimokuComparer(IchimokuSettings &p_IchimokuSetting, const int p_TraceLineA, const int p_TraceLineB);
+	Crossover::State AnalyzeByValueComparer(double &p_ValuesA[], double &p_ValuesB[]);
 	
 	Crossover::State GetCurrentState() const { return(m_CurrState); }
 	
@@ -49,10 +49,10 @@ void CrossoverManager::UpdateCrossover(const bool p_IsNewCrossover, const dateti
    } 
 }
 
-Crossover::State CrossoverManager::AnalyzeByIchimokuComparer(IchimokuSettings &p_IchimokuSetting, const int p_TraceLineA, const int p_TraceLineB) {
+Crossover::State CrossoverManager::AnalyzeByValueComparer(double &p_ValuesA[], double &p_ValuesB[]) {
    const Crossover::State _PreviousState = m_CurrState;
    
-   if((m_CurrState = GetStateByIchimokuComparer(p_IchimokuSetting, p_TraceLineA, p_TraceLineB)) != Crossover::State::INVALID_CROSSOVER) {
+   if((m_CurrState = GetStateByValueComparer(p_ValuesA, p_ValuesB)) != Crossover::State::INVALID_CROSSOVER) {
       if(_PreviousState != m_CurrState) { // Is new Crossover?
          SelectNextSignal();
       } 
@@ -63,17 +63,13 @@ Crossover::State CrossoverManager::AnalyzeByIchimokuComparer(IchimokuSettings &p
    return(m_CurrState);
 }
 
-Crossover::State CrossoverManager::GetStateByIchimokuComparer(IchimokuSettings &p_IchimokuSetting, const int p_TraceLineA, const int p_TraceLineB) {
-   Ichimoku _CurrIchimoku(&p_IchimokuSetting);
-   Ichimoku _PrevIchimoku(&p_IchimokuSetting);
-   
-   SetIchimoku(_CurrIchimoku.ptr_IchimokuSettings, 1, _CurrIchimoku.TenkanSen, _CurrIchimoku.KijunSen, _CurrIchimoku.ChinkouSpan, _CurrIchimoku.SenkouSpanA, _CurrIchimoku.SenkouSpanB);
-   SetIchimoku(_PrevIchimoku.ptr_IchimokuSettings, 2, _PrevIchimoku.TenkanSen, _PrevIchimoku.KijunSen, _PrevIchimoku.ChinkouSpan, _PrevIchimoku.SenkouSpanA, _PrevIchimoku.SenkouSpanB);
-   
-   if((_PrevIchimoku.TenkanSen > _PrevIchimoku.KijunSen && _CurrIchimoku.TenkanSen < _CurrIchimoku.KijunSen) ||
-      (_PrevIchimoku.TenkanSen < _PrevIchimoku.KijunSen && _CurrIchimoku.TenkanSen > _CurrIchimoku.KijunSen)) { 
-      return(Crossover::State::VALID_CROSSOVER); 
+Crossover::State CrossoverManager::GetStateByValueComparer(double &p_ValuesA[], double &p_ValuesB[]) {
+   for(uint i = 1; i < (uint)ArraySize(p_ValuesA) && i < (uint)ArraySize(p_ValuesB); ++i) {
+      if((p_ValuesA[i - 1] > p_ValuesB[i - 1] && p_ValuesA[i] < p_ValuesB[i]) ||
+      (p_ValuesA[i - 1] < p_ValuesB[i - 1] && p_ValuesA[i] > p_ValuesB[i])) { 
+         return(Crossover::State::VALID_CROSSOVER); 
+      }
    }
-   
+
    return(Crossover::State::INVALID_CROSSOVER);
 }

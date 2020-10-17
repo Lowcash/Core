@@ -9,7 +9,6 @@
 
 #include "../../Include/Common.mqh"
 #include "../_SignalManager.mqh"
-#include "../_Indicators/MovingAverage.mqh"
 #include "../_Indicators/Ichimoku.mqh"
 #include "Trend.mqh"
 
@@ -93,7 +92,7 @@ Trend::State TrendManager::GetTrendByCandlePosition(const double p_CandleValue, 
          break;
       case Trend::State::INVALID_TREND: {
          const bool _IsOrderedValuesConditionOK = !p_CheckOrderedValues || (p_CheckOrderedValues && GetArraySortDirection(p_Values) != ArraySortDirection::NOT_SORTED);
-         const bool _IsCritValueFarthestConditionOK = !p_CheckCritValueFarthest || (p_CheckCritValueFarthest && GetFarthest(p_CandleValue, p_Values) == p_Values[p_CritValueIdx]);
+         const bool _IsCritValueFarthestConditionOK = !p_CheckCritValueFarthest || (p_CheckCritValueFarthest && GetFarthest(p_Values, p_CandleValue) == p_Values[p_CritValueIdx]);
          
          if(_IsOrderedValuesConditionOK && _IsCritValueFarthestConditionOK) {
             if(p_CandleValue > p_Values[p_CritValueIdx]) { return(Trend::State::VALID_UPTREND); }
@@ -108,12 +107,11 @@ Trend::State TrendManager::GetTrendByCandlePosition(const double p_CandleValue, 
 }
 
 Trend::State TrendManager::GetStateByIchimokuTracing(IchimokuSettings &p_IchimokuSetting, const int p_TraceLine, const bool p_IsTraceUntilNotInvalid) {
-   Ichimoku _CurrIchimoku(&p_IchimokuSetting);
-   Ichimoku _PrevIchimoku(&p_IchimokuSetting);
+   Ichimoku _PrevIchimoku, _CurrIchimoku;
 
    for(int i = 1; (p_IsTraceUntilNotInvalid && i < Bars(p_IchimokuSetting.m_Symbol, p_IchimokuSetting.m_TimeFrame)) || i == 1; ++i) {
-      SetIchimoku(_CurrIchimoku.ptr_IchimokuSettings, i + 0, _CurrIchimoku.TenkanSen, _CurrIchimoku.KijunSen, _CurrIchimoku.ChinkouSpan, _CurrIchimoku.SenkouSpanA, _CurrIchimoku.SenkouSpanB);
-      SetIchimoku(_PrevIchimoku.ptr_IchimokuSettings, i + 1, _PrevIchimoku.TenkanSen, _PrevIchimoku.KijunSen, _PrevIchimoku.ChinkouSpan, _PrevIchimoku.SenkouSpanA, _PrevIchimoku.SenkouSpanB);
+      SetIchimoku(&p_IchimokuSetting, i + 0, _CurrIchimoku.TenkanSen, _CurrIchimoku.KijunSen, _CurrIchimoku.ChinkouSpan, _CurrIchimoku.SenkouSpanA, _CurrIchimoku.SenkouSpanB);
+      SetIchimoku(&p_IchimokuSetting, i + 1, _PrevIchimoku.TenkanSen, _PrevIchimoku.KijunSen, _PrevIchimoku.ChinkouSpan, _PrevIchimoku.SenkouSpanA, _PrevIchimoku.SenkouSpanB);
       
       switch(p_TraceLine) {
          case TENKANSEN_LINE: {
