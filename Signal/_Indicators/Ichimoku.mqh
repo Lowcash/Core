@@ -9,6 +9,9 @@
 
 #include "../../Include/MQL4Helper.mqh"
 
+// Usually BULL is green and BEAR is red
+enum CloudColor { BULL = 0, BEAR };
+
 class IchimokuSettings {
  public:
    const string m_Symbol;
@@ -56,5 +59,26 @@ void GetKijunSen(Ichimoku &p_InIchimoku[], double &p_OutKijunSen[]) {
       }
    } else {
       Print("KijunSen array could not be initialized!");
+   }
+}
+
+void GetChikouSpan(Ichimoku &p_InIchimoku[], double &p_OutChikouSpan[]) {
+   if(ArrayResize(p_OutChikouSpan, ArraySize(p_InIchimoku))) {
+      for (int i = 0; i < ArraySize(p_InIchimoku); ++i) {
+         p_OutChikouSpan[i] = p_InIchimoku[i].ChinkouSpan;
+      }
+   } else {
+      Print("ChikouSpan array could not be initialized!");
+   }
+}
+
+void GetSenkouSpan(Ichimoku &p_InIchimoku[], double &p_OutSenkouSpanA[], double &p_OutSenkouSpanB[]) {
+   if(ArrayResize(p_OutSenkouSpanA, ArraySize(p_InIchimoku)) != -1 && ArrayResize(p_OutSenkouSpanB, ArraySize(p_InIchimoku)) != -1) {
+      for (int i = 0; i < ArraySize(p_InIchimoku); ++i) {
+         p_OutSenkouSpanA[i] = p_InIchimoku[i].SenkouSpanA;
+         p_OutSenkouSpanB[i] = p_InIchimoku[i].SenkouSpanB;
+      }
+   } else {
+      Print("OutSenkouSpan arrays could not be initialized!");
    }
 }
