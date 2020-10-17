@@ -17,7 +17,7 @@ class CrossoverManager : public SignalManager {
    
  	Crossover::State m_CurrState;
 
-   void UpdateCrossover(const bool p_IsNewCrossover, const datetime p_Time, const double p_Value);
+   void UpdateCrossover(const datetime p_BeginTime, const double p_BeginValue, const datetime p_EndTime, const double p_EndValue);
    
    Crossover::State GetStateByValueComparer(double &p_ValuesA[], double &p_ValuesB[]);
  public:
@@ -39,14 +39,12 @@ CrossoverManager::CrossoverManager(const int p_MaxCrossovers, const string p_Man
    }
 }
 
-void CrossoverManager::UpdateCrossover(const bool p_IsNewCrossover, const datetime p_Time, const double p_Value) {
+void CrossoverManager::UpdateCrossover(const datetime p_BeginTime, const double p_BeginValue, const datetime p_EndTime, const double p_EndValue) {
 	const int _SignalPointer = GetSignalPointer();
 
-   if(p_IsNewCrossover) {
-      m_Crossovers[_SignalPointer] = Signal(StringFormat("%s_%d", GetManagerId(), _SignalPointer), p_Time, p_Value);
-   } else {
-      m_Crossovers[_SignalPointer].SetEnd(p_Time, p_Value);
-   } 
+   m_Crossovers[_SignalPointer] = Signal(StringFormat("%s_%d", GetManagerId(), _SignalPointer), p_BeginTime, p_BeginValue);
+   
+   m_Crossovers[_SignalPointer].SetEnd(p_EndTime, p_EndValue);
 }
 
 Crossover::State CrossoverManager::AnalyzeByValueComparer(double &p_ValuesA[], double &p_ValuesB[]) {
@@ -55,9 +53,9 @@ Crossover::State CrossoverManager::AnalyzeByValueComparer(double &p_ValuesA[], d
    if((m_CurrState = GetStateByValueComparer(p_ValuesA, p_ValuesB)) != Crossover::State::INVALID_CROSSOVER) {
       if(_PreviousState != m_CurrState) { // Is new Crossover?
          SelectNextSignal();
+         
+         UpdateCrossover(Time[2], MathMin(p_ValuesA[1], p_ValuesB[1]), Time[1], MathMax(p_ValuesA[0], p_ValuesB[0]));
       } 
-      
-      UpdateCrossover(_PreviousState != m_CurrState, _Time, Bid);
    }
    
    return(m_CurrState);
