@@ -21,12 +21,7 @@ class IchimokuSettings {
 
 struct Ichimoku {
  public:
-   IchimokuSettings *ptr_IchimokuSettings;
-   
    double TenkanSen, KijunSen, ChinkouSpan, SenkouSpanA, SenkouSpanB;
- 
- Ichimoku(IchimokuSettings *p_IchimokuSettings)
-   : ptr_IchimokuSettings(p_IchimokuSettings) {}
 };
 
 void SetIchimoku(IchimokuSettings *p_IchimokuSettings, const int p_Shift, double &p_TenkanSen, double &p_KijunSen, double &p_ChinkouSpan, double &p_SenkouSpanA, double &p_SenkouSpanB) {
@@ -42,4 +37,24 @@ void SetIchimoku(IchimokuSettings *p_IchimokuSettings, const int p_Shift, double
    p_ChinkouSpan = NormalizeDouble(CopyBufferMQL4(_Handle, CHIKOUSPAN_LINE, p_IchimokuSettings.m_KijunSenPeriod), _Digits + 1);
    p_SenkouSpanA = NormalizeDouble(CopyBufferMQL4(_Handle, SENKOUSPANA_LINE, p_Shift), _Digits + 1);
    p_SenkouSpanB = NormalizeDouble(CopyBufferMQL4(_Handle, SENKOUSPANB_LINE, p_Shift), _Digits + 1);
+}
+
+void GetTenkanSen(Ichimoku &p_InIchimoku[], double &p_OutTenkanSen[]) {
+   if(ArrayResize(p_OutTenkanSen, ArraySize(p_InIchimoku))) {
+      for (int i = 0; i < ArraySize(p_InIchimoku); ++i) {
+         p_OutTenkanSen[i] = p_InIchimoku[i].TenkanSen;
+      }
+   } else {
+      Print("TenkanSen array could not be initialized!");
+   }
+}
+
+void GetKijunSen(Ichimoku &p_InIchimoku[], double &p_OutKijunSen[]) {
+   if(ArrayResize(p_OutKijunSen, ArraySize(p_InIchimoku))) {
+      for (int i = 0; i < ArraySize(p_InIchimoku); ++i) {
+         p_OutKijunSen[i] = p_InIchimoku[i].KijunSen;
+      }
+   } else {
+      Print("KijunSen array could not be initialized!");
+   }
 }

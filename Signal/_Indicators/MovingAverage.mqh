@@ -22,8 +22,7 @@ class MovingAverageSettings {
 };
 
 struct MovingAverage {
-   MovingAverageSettings *ptr_MovingAverageSetting;
-   
+ public:
    double MovingAverageValue;
 };
 
@@ -36,4 +35,14 @@ void SetMovingAverage(MovingAverageSettings *p_MovingAverageSetting, const int p
    }
    
    p_MovingAverage = NormalizeDouble(CopyBufferMQL4(_Handle, 0, p_Shift), _Digits + 1);
+}
+
+void GetMovingAverage(MovingAverage &p_InMovingAverage[], double &p_OutMovingAverage[]) {
+   if(ArrayResize(p_OutMovingAverage, ArraySize(p_InMovingAverage))) {
+      for (int i = 0; i < ArraySize(p_InMovingAverage); ++i) {
+         p_OutMovingAverage[i] = p_InMovingAverage[i].MovingAverageValue;
+      }
+   } else {
+      Print("Moving Average array could not be initialized!");
+   }
 }
