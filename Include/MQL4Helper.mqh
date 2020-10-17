@@ -7,7 +7,7 @@
 #property link      "https://www.mql5.com"
 
 static datetime Time[];
-static double Open[], Close[], Low[];
+static double Open[], Close[], Low[], High[];
 
 static datetime _Time;
 static double Ask, Bid;
@@ -20,12 +20,14 @@ void UpdatePredefinedVars() {
    ArraySetAsSeries(Open, true);
    ArraySetAsSeries(Close, true);
    ArraySetAsSeries(Low, true);
+   ArraySetAsSeries(High, true);
    
    CopyTime(_Symbol, _Period, 0, 100, Time);
    CopyOpen(_Symbol, _Period, 0, 100, Open);
    CopyClose(_Symbol, _Period, 0, 100, Close);
    CopyLow(_Symbol, _Period, 0, 100, Low);
-   
+   CopyHigh(_Symbol, _Period, 0, 100, High);
+    
    MqlTick _LastTick;
    SymbolInfoTick(_Symbol, _LastTick);
    _Time = _LastTick.time;

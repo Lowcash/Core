@@ -8,7 +8,7 @@
 
 #include "Common.mqh"
 
-void DrawTrendMarker(const string p_ID, const datetime p_DateTime, const double p_Value, const bool p_IsMarkerUpDirection, color p_Color) {
+void DrawArrowMarker(const string p_ID, const datetime p_DateTime, const double p_Value, const bool p_IsMarkerUpDirection, color p_Color) {
    const long SChartId = ChartID();
 
    if(ObjectFind(SChartId, p_ID) != -1) 
@@ -22,7 +22,7 @@ void DrawTrendMarker(const string p_ID, const datetime p_DateTime, const double 
       Print("Marker was not created - something went wrong!!");
 }
 
-void DrawTrendMarker(const string p_ID, const datetime p_BeginDateTime, const double p_BeginValue, const datetime p_EndDateTime, const double p_EndValue, const color p_Color) {
+void DrawRectangeMarker(const string p_ID, const datetime p_BeginDateTime, const double p_BeginValue, const datetime p_EndDateTime, const double p_EndValue, const color p_Color) {
    const long SChartId = ChartID();
 
    if(ObjectFind(SChartId, p_ID) != -1) 

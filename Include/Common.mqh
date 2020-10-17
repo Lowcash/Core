@@ -100,7 +100,10 @@ bool IsNewBar(const ENUM_TIMEFRAMES p_TimeFrame) {
    return(_PrevTime != _CurrTime);
 }
 
-
+template<typename T>
+bool IsValueBetweenValues(const T p_InValue, const T p_BetweenA, const T p_BetweenB) {
+   return(MathMin(p_BetweenA, p_BetweenB) < p_InValue && p_InValue < MathMax(p_BetweenA, p_BetweenB));
+}
 
 enum ArraySortDirection { NOT_SORTED = -1, ASCENDING = 1, DESCENDING = 2 };
 
