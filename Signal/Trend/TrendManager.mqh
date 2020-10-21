@@ -18,15 +18,15 @@ class TrendManager : public SignalManager {
    
  	Trend::State m_CurrState;
 
-   void UpdateTrend(const bool p_IsNewTrend, const datetime p_Time, const double p_Value);
+   void UpdateTrend(const bool p_IsNewTrend, const Trend::State p_TrendState, const datetime p_Time, const double p_Value);
    
    Trend::State GetTrendByCandlePosition(const double p_CandleValue, double &p_Values[], const int p_CritValueIdx, const bool p_CheckOrderedValues, const bool p_CheckCritValueFarthest);
-   Trend::State GetStateByIchimokuTracing(IchimokuSettings &p_IchimokuSetting, const int p_TraceLine, const bool p_IsTraceUntilNotInvalid = false);
+   Trend::State GetStateByLineDirection(const double p_PrevValue, const double p_CurrValue);
  public:
 	TrendManager(const int p_MaxTrends = 1, const string p_ManagerID = "TrendManager");
 	
 	Trend::State AnalyzeByTrendByCandlePosition(const double p_CandleValue, double &p_Values[], const int p_CritValueIdx, const bool p_CheckOrderedValues, const bool p_CheckCritValueFarthest);
-	Trend::State AnalyzeByIchimokuTracing(IchimokuSettings &p_IchimokuSetting, const int p_TraceLine, const bool p_IsTraceUntilNotInvalid = false);
+	Trend::State AnalyzeByLineDirection(const double p_PrevValue, const double p_CurrValue);
 	
 	Trend::State GetCurrentState() const { return(m_CurrState); }
 	
@@ -42,11 +42,12 @@ TrendManager::TrendManager(const int p_MaxTrends, const string p_ManagerID)
    }
 }
 
-void TrendManager::UpdateTrend(const bool p_IsNewTrend, const datetime p_Time, const double p_Value) {
+void TrendManager::UpdateTrend(const bool p_IsNewTrend, const Trend::State p_TrendState, const datetime p_Time, const double p_Value) {
 	const int _SignalPointer = GetSignalPointer();
 
    if(p_IsNewTrend) {
       m_Trends[_SignalPointer] = Signal(StringFormat("%s_%d", GetManagerId(), _SignalPointer), p_Time, p_Value);
+      m_Trends[_SignalPointer].SetState(p_TrendState);
    } else {
       m_Trends[_SignalPointer].SetEnd(p_Time, p_Value);
    } 
@@ -60,21 +61,21 @@ Trend::State TrendManager::AnalyzeByTrendByCandlePosition(const double p_CandleV
          SelectNextSignal();
       } 
       
-      UpdateTrend(_PreviousState != m_CurrState, _Time, Bid);
+      UpdateTrend(_PreviousState != m_CurrState, m_CurrState, _Time, Bid);
    }
    
    return(m_CurrState);
 }
 
-Trend::State TrendManager::AnalyzeByIchimokuTracing(IchimokuSettings &p_IchimokuSetting, const int p_TraceLine, const bool p_IsTraceUntilNotInvalid) {
+Trend::State TrendManager::AnalyzeByLineDirection(const double p_PrevValue, const double p_CurrValue) {
    const Trend::State _PreviousState = m_CurrState;
    
-   if((m_CurrState = GetStateByIchimokuTracing(p_IchimokuSetting, p_TraceLine, p_IsTraceUntilNotInvalid)) != Trend::State::INVALID_TREND) {
+   if((m_CurrState = GetStateByLineDirection(p_PrevValue, p_CurrValue)) != Trend::State::INVALID_TREND) {
       if(_PreviousState != m_CurrState) { // Is new Trend?
          SelectNextSignal();
       } 
       
-      UpdateTrend(_PreviousState != m_CurrState, _Time, Bid);
+      UpdateTrend(_PreviousState != m_CurrState, m_CurrState, _Time, Bid);
    }
    
    return(m_CurrState);
@@ -106,46 +107,9 @@ Trend::State TrendManager::GetTrendByCandlePosition(const double p_CandleValue, 
    return(Trend::State::INVALID_TREND);
 }
 
-Trend::State TrendManager::GetStateByIchimokuTracing(IchimokuSettings &p_IchimokuSetting, const int p_TraceLine, const bool p_IsTraceUntilNotInvalid) {
-   Ichimoku _PrevIchimoku, _CurrIchimoku;
-
-   for(int i = 1; (p_IsTraceUntilNotInvalid && i < Bars(p_IchimokuSetting.m_Symbol, p_IchimokuSetting.m_TimeFrame)) || i == 1; ++i) {
-      SetIchimoku(&p_IchimokuSetting, i + 0, _CurrIchimoku.TenkanSen, _CurrIchimoku.KijunSen, _CurrIchimoku.ChinkouSpan, _CurrIchimoku.SenkouSpanA, _CurrIchimoku.SenkouSpanB);
-      SetIchimoku(&p_IchimokuSetting, i + 1, _PrevIchimoku.TenkanSen, _PrevIchimoku.KijunSen, _PrevIchimoku.ChinkouSpan, _PrevIchimoku.SenkouSpanA, _PrevIchimoku.SenkouSpanB);
-      
-      switch(p_TraceLine) {
-         case TENKANSEN_LINE: {
-            if(_PrevIchimoku.TenkanSen < _CurrIchimoku.TenkanSen) { return(Trend::State::VALID_UPTREND); }
-            if(_PrevIchimoku.TenkanSen > _CurrIchimoku.TenkanSen) { return(Trend::State::VALID_DOWNTREND); }
-      
-            break;
-         }
-         case KIJUNSEN_LINE: {
-            if(_PrevIchimoku.KijunSen < _CurrIchimoku.KijunSen) { return(Trend::State::VALID_UPTREND); }
-            if(_PrevIchimoku.KijunSen > _CurrIchimoku.KijunSen) { return(Trend::State::VALID_DOWNTREND); }
-      
-            break;
-         }
-         case CHIKOUSPAN_LINE: {
-            if(_PrevIchimoku.ChinkouSpan < _CurrIchimoku.ChinkouSpan) { return(Trend::State::VALID_UPTREND); }
-            if(_PrevIchimoku.ChinkouSpan > _CurrIchimoku.ChinkouSpan) { return(Trend::State::VALID_DOWNTREND); }
-      
-            break;
-         }
-         case SENKOUSPANA_LINE: {
-            if(_PrevIchimoku.SenkouSpanA < _CurrIchimoku.SenkouSpanA) { return(Trend::State::VALID_UPTREND); }
-            if(_PrevIchimoku.SenkouSpanA > _CurrIchimoku.SenkouSpanA) { return(Trend::State::VALID_DOWNTREND); }
-      
-            break;
-         }
-         case SENKOUSPANB_LINE: {
-            if(_PrevIchimoku.SenkouSpanB < _CurrIchimoku.SenkouSpanB) { return(Trend::State::VALID_UPTREND); }
-            if(_PrevIchimoku.SenkouSpanB > _CurrIchimoku.SenkouSpanB) { return(Trend::State::VALID_DOWNTREND); }
-      
-            break;
-         }
-      }
-   }
+Trend::State TrendManager::GetStateByLineDirection(const double p_PrevValue, const double p_CurrValue) {
+   if(p_PrevValue < p_CurrValue) { return(Trend::State::VALID_UPTREND); }
+   if(p_PrevValue > p_CurrValue) { return(Trend::State::VALID_DOWNTREND); }
    
    return(Trend::State::INVALID_TREND);
 }
