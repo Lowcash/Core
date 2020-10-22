@@ -17,13 +17,13 @@ class CrossoverManager : public SignalManager {
    
  	Crossover::State m_CurrState;
 
-   void UpdateCrossover(const datetime p_BeginTime, const double p_BeginValue, const datetime p_EndTime, const double p_EndValue);
+   void UpdateCrossover(const datetime p_BeginTime, const datetime p_EndTime, const double p_Value);
    
-   Crossover::State GetStateByValueComparer(double &p_ValuesA[], double &p_ValuesB[]);
+   Crossover::State GetStateByValueComparer(double &p_InValuesA[], double &p_InValuesB[], double &p_OutMinValue, double &p_OutMaxValue);
  public:
 	CrossoverManager(const int p_MaxTrends = 1, const string p_ManagerID = "CrossoverManager");
 	
-	Crossover::State AnalyzeByValueComparer(double &p_ValuesA[], double &p_ValuesB[]);
+	Crossover::State AnalyzeByValueComparer(double &p_InValuesA[], double &p_InValuesB[]);
 	
 	Crossover::State GetCurrentState() const { return(m_CurrState); }
 	
@@ -39,32 +39,32 @@ CrossoverManager::CrossoverManager(const int p_MaxCrossovers, const string p_Man
    }
 }
 
-void CrossoverManager::UpdateCrossover(const datetime p_BeginTime, const double p_BeginValue, const datetime p_EndTime, const double p_EndValue) {
+void CrossoverManager::UpdateCrossover(const datetime p_BeginTime, const datetime p_EndTime, const double p_Value) {
 	const int _SignalPointer = GetSignalPointer();
 
-   m_Crossovers[_SignalPointer] = Signal(StringFormat("%s_%d", GetManagerId(), _SignalPointer), p_BeginTime, p_BeginValue);
-   
-   m_Crossovers[_SignalPointer].SetEnd(p_EndTime, p_EndValue);
+   m_Crossovers[_SignalPointer] = Signal(StringFormat("%s_%d", GetManagerId(), _SignalPointer), p_BeginTime, p_Value);
+   m_Crossovers[_SignalPointer].SetEnd(p_EndTime, p_Value);
 }
 
-Crossover::State CrossoverManager::AnalyzeByValueComparer(double &p_ValuesA[], double &p_ValuesB[]) {
-   const Crossover::State _PreviousState = m_CurrState;
+Crossover::State CrossoverManager::AnalyzeByValueComparer(double &p_InValuesA[], double &p_InValuesB[]) {
+   double _MinValue = DBL_EPSILON, _MaxValue = DBL_EPSILON;
    
-   if((m_CurrState = GetStateByValueComparer(p_ValuesA, p_ValuesB)) != Crossover::State::INVALID_CROSSOVER) {
-      if(_PreviousState != m_CurrState) { // Is new Crossover?
-         SelectNextSignal();
-         
-         UpdateCrossover(Time[2], MathMin(p_ValuesA[1], p_ValuesB[1]), Time[1], MathMax(p_ValuesA[0], p_ValuesB[0]));
-      } 
+   if((m_CurrState = GetStateByValueComparer(p_InValuesA, p_InValuesB, _MinValue, _MaxValue)) != Crossover::State::INVALID_CROSSOVER) {
+      SelectNextSignal();
+      
+      UpdateCrossover(Time[2], Time[1], _MaxValue);
    }
    
    return(m_CurrState);
 }
 
-Crossover::State CrossoverManager::GetStateByValueComparer(double &p_ValuesA[], double &p_ValuesB[]) {
-   for(uint i = 1; i < (uint)ArraySize(p_ValuesA) && i < (uint)ArraySize(p_ValuesB); ++i) {
-      if((p_ValuesA[i - 1] > p_ValuesB[i - 1] && p_ValuesA[i] < p_ValuesB[i]) ||
-      (p_ValuesA[i - 1] < p_ValuesB[i - 1] && p_ValuesA[i] > p_ValuesB[i])) { 
+Crossover::State CrossoverManager::GetStateByValueComparer(double &p_InValuesA[], double &p_InValuesB[], double &p_OutMinValue, double &p_OutMaxValue) {
+   for(uint i = 1; i < (uint)ArraySize(p_InValuesA) && i < (uint)ArraySize(p_InValuesB); ++i) {
+      if((p_InValuesA[i - 1] >= p_InValuesB[i - 1] && p_InValuesA[i] <= p_InValuesB[i]) ||
+      (p_InValuesA[i - 1] <= p_InValuesB[i - 1] && p_InValuesA[i] >= p_InValuesB[i])) {
+         p_OutMinValue = MathMin(p_InValuesA[ArrayMinimum(p_InValuesA)], p_InValuesB[ArrayMinimum(p_InValuesB)]);
+         p_OutMaxValue = MathMax(p_InValuesA[ArrayMaximum(p_InValuesA)], p_InValuesB[ArrayMaximum(p_InValuesB)]);
+         
          return(Crossover::State::VALID_CROSSOVER); 
       }
    }
