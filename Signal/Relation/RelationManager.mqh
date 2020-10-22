@@ -78,6 +78,21 @@ Relation::State RelationManager::GetStateByValueComparer(double &p_ValuesA[], do
          
             break;
          }
+         case Relation::Type::IS_EQUAL: {
+            if(p_ValuesA[i] != p_ValuesB[i]) { _RelationState = Relation::State::INVALID_RELATION; }
+         
+            break;
+         }
+         case Relation::Type::IS_LOWER_OR_EQUAL: {
+            if(p_ValuesA[i] > p_ValuesB[i]) { _RelationState = Relation::State::INVALID_RELATION; }
+         
+            break;
+         }
+         case Relation::Type::IS_HIGHER_OR_EQUAL: {
+            if(p_ValuesA[i] < p_ValuesB[i]) { _RelationState = Relation::State::INVALID_RELATION; }
+         
+            break;
+         }
       }
    }
    
